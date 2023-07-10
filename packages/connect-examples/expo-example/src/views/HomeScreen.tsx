@@ -10,7 +10,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {/* @ts-expect-error */}
-      <Button title="Mock Screen" onPress={() => navigation.push('Mock')} />
+      {/* <Button title="Mock Screen" onPress={() => navigation.push('Mock')} /> */}
       <Suspense fallback={<Text>Loading...</Text>}>
         {Platform.OS === 'web' ? <USB /> : <Bluetooth />}
       </Suspense>
@@ -24,6 +24,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
+    padding: 15,
   },
 });

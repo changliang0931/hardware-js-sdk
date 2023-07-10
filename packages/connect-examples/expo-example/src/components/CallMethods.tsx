@@ -46,6 +46,8 @@ export type ICallMethodProps = {
   type: 'Bluetooth' | 'USB';
 };
 export function CallMethods({ HardwareLowLevelSDK, SDK, type }: ICallMethodProps) {
+  const [bleVersion, setBleVersion] = useState('');
+  const [result, setResult] = useState('未检测');
   const [showPinInput, setShowPinInput] = useState(false);
   const [pinValue, setPinValue] = useState('');
   const [devices, setDevices] = useState<Device[]>([]);
@@ -116,6 +118,8 @@ export function CallMethods({ HardwareLowLevelSDK, SDK, type }: ICallMethodProps
     });
 
     SDK.on(DEVICE.DISCONNECT, (message: CoreMessage) => {
+      alert('设备已断开请重新连接')
+      setSelectedDevice(null)
       console.log('example get disconnect event: ', message);
     });
     registerListener = true;
@@ -139,10 +143,27 @@ export function CallMethods({ HardwareLowLevelSDK, SDK, type }: ICallMethodProps
   };
 
   const handleGetFeatures = async () => {
+    if (!bleVersion) {
+      alert('请输入蓝牙版本号')
+      return;
+    }
+    if (!selectedDevice) {
+      alert('请先搜素设备')
+      return;
+    }
+
     const response = await SDK.getFeatures(selectedDevice?.connectId);
     console.log('example getFeatures response: ', response);
     if (response.success) {
       setSelectedDevice({ ...selectedDevice, features: response.payload } as Device);
+      if (bleVersion === response.payload?.ble_ver) {
+        setResult('成功！')
+
+      } else {
+        setResult('检测失败，请检测设备及版本号！')
+      }
+    } else {
+      setResult('检测失败，请检测设备及版本号！')
     }
   };
 
@@ -258,9 +279,9 @@ export function CallMethods({ HardwareLowLevelSDK, SDK, type }: ICallMethodProps
   return (
     <View>
       <View style={styles.buttonContainer}>
-        <Button title="search devices" onPress={() => handleSearchDevices()} />
-        <Button title="get Features" onPress={() => handleGetFeatures()} />
-        <Button title="check firmware release" onPress={() => handleCheckFirmwareRelease()} />
+        <Button title="搜索设备" onPress={() => handleSearchDevices()} />
+        <Button title="蓝牙检测" onPress={() => handleGetFeatures()} />
+        {/* <Button title="check firmware release" onPress={() => handleCheckFirmwareRelease()} />
         <Button
           title="check ble firmware release"
           onPress={() => handleCheckBLEFirmwareRelease()}
@@ -275,9 +296,9 @@ export function CallMethods({ HardwareLowLevelSDK, SDK, type }: ICallMethodProps
         <Button title="getPassphraseState" onPress={() => handleGetPassphraseState()} />
         <Button title="requestWebUsbDevice" onPress={() => handleRequestWebUsbDevice()} />
         <Button title="updateBootloader" onPress={() => handleUpdateBootloader()} />
-        <Button title="updateSettings" onPress={() => handleUpdateSettings()} />
+        <Button title="updateSettings" onPress={() => handleUpdateSettings()} /> */}
       </View>
-      {showPinInput && (
+      {/* {showPinInput && (
         <ReceivePin
           value={pinValue}
           onChange={val => setPinValue(val)}
@@ -300,11 +321,29 @@ export function CallMethods({ HardwareLowLevelSDK, SDK, type }: ICallMethodProps
         {Platform.OS === 'web' ? (
           <input type="file" onChange={e => onFileChange(e, data => setSelectedFile(data))} />
         ) : null}
-      </View>
+      </View> */}
 
       <DeviceList data={devices} onSelected={device => setSelectedDevice(device)} />
-
-      <View style={styles.container}>
+      <View style={styles.commonParamItem}>
+        <Text>输入蓝牙版本</Text>
+        <TextInput
+          style={styles.input}
+          value={bleVersion}
+          placeholder='请输入蓝牙版本号 如 1.2.1'
+          onChangeText={v => {
+            setResult(v.trim());
+          }}
+        />
+      </View>
+      <View style={styles.commonParamItem}>
+        <Text>蓝牙名称：{selectedDevice?.features?.ble_name}</Text>
+        <Text>蓝牙版本：{selectedDevice?.features?.ble_ver}</Text>
+        <Text>SE 版本：{selectedDevice?.features?.se_ver}</Text>
+      </View>
+      <View style={styles.commonParamItem}>
+        <Text>检测结果：<Text style={{ color: result === '成功！' ? 'green' : 'red' }}>{result}</Text></Text>
+      </View>
+      {/* <View style={styles.container}>
         <Text>Common Parameters</Text>
         <View style={{ flexDirection: 'row' }}>
           <View style={styles.commonParamItem}>
@@ -408,7 +447,7 @@ export function CallMethods({ HardwareLowLevelSDK, SDK, type }: ICallMethodProps
         selectedDevice={selectedDevice}
         commonParams={optionalParams}
       />
-      <CallKaspaMethods SDK={SDK} selectedDevice={selectedDevice} commonParams={optionalParams} />
+      <CallKaspaMethods SDK={SDK} selectedDevice={selectedDevice} commonParams={optionalParams} /> */}
     </View>
   );
 }
@@ -436,6 +475,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     paddingStart: 12,
     paddingEnd: 12,
+    marginTop: 10
   },
   input: {
     height: 35,
